@@ -207,7 +207,10 @@ export default function MatchingCompare() {
         const canvas = map.getCanvas();
         if (canvas.clientWidth >= 2 && canvas.clientHeight >= 2) {
           map.fitBounds(bounds, { padding: 48, duration: 0 });
-          map.setMinZoom(map.getZoom());
+          const fittedZoom = map.getZoom();
+          const frame = map.getBounds();
+          map.setMinZoom(fittedZoom);
+          map.setMaxBounds(frame);
           return;
         }
         if (tries < 30) frame = requestAnimationFrame(() => fit(tries + 1));
@@ -310,6 +313,7 @@ export default function MatchingCompare() {
       <div className="relative min-h-0 flex-1">
         {/* MapLibre sets .maplibregl-map { position: relative }, which drops Tailwind's absolute and collapses this pane to 0 height. */}
         <div ref={mapNode} className="absolute inset-0" style={{ position: "absolute", inset: 0 }} />
+        <ColourLegend metric={metric} />
         {!painted && <p className="absolute bottom-3 left-3 text-sm text-neutral-400">Loading roads…</p>}
       </div>
     </main>
@@ -321,6 +325,79 @@ const COLOUR_OPTIONS = [
   { value: "flow" as const, label: "Flow" },
   { value: "travel" as const, label: "Travel time" },
 ];
+
+/** Same stops as pipelines/matchers.py. Missing values are #6b7280 in every metric. */
+const MISSING_COLOR = "#6b7280";
+
+type LegendStop = { value: number; color: string };
+
+const COLOUR_STOPS: Record<Metric, { title: string; unit: string; stops: LegendStop[] }> = {
+  speed: {
+    title: "Speed",
+    unit: "km/h",
+    stops: [
+      { value: 0, color: "#d73027" },
+      { value: 40, color: "#fc8d59" },
+      { value: 70, color: "#fee08b" },
+      { value: 100, color: "#1a9850" },
+    ],
+  },
+  flow: {
+    title: "Flow",
+    unit: "veh/h",
+    stops: [
+      { value: 0, color: "#e0f3f8" },
+      { value: 800, color: "#67a9cf" },
+      { value: 2500, color: "#2166ac" },
+    ],
+  },
+  travel: {
+    title: "Travel time",
+    unit: "seconds",
+    stops: [
+      { value: 0, color: "#1a9850" },
+      { value: 45, color: "#fee08b" },
+      { value: 120, color: "#d73027" },
+    ],
+  },
+};
+
+function legendGradient(stops: LegendStop[]) {
+  const max = stops[stops.length - 1]?.value ?? 1;
+  return `linear-gradient(to right, ${stops
+    .map((stop) => `${stop.color} ${max === 0 ? 0 : (stop.value / max) * 100}%`)
+    .join(", ")})`;
+}
+
+function ColourLegend({ metric }: { metric: Metric }) {
+  const legend = COLOUR_STOPS[metric];
+  const max = legend.stops[legend.stops.length - 1]?.value ?? 1;
+  return (
+    <div className="ndw-legend">
+      <div className="ndw-legend-title">
+        <span>{legend.title}</span>
+        <span className="ndw-legend-unit">{legend.unit}</span>
+      </div>
+      <div className="ndw-legend-bar" style={{ background: legendGradient(legend.stops) }} />
+      <div className="ndw-legend-labels">
+        {legend.stops.map((stop, index) => {
+          const at = max === 0 ? 0 : (stop.value / max) * 100;
+          const edge = index === 0 ? "start" : index === legend.stops.length - 1 ? "end" : "mid";
+          return (
+            <span key={stop.value} className="ndw-legend-label" data-edge={edge} style={{ left: `${at}%` }}>
+              {stop.value}
+            </span>
+          );
+        })}
+      </div>
+      <div className="ndw-legend-missing">
+        <span className="ndw-legend-swatch" style={{ background: MISSING_COLOR }} />
+        Missing
+      </div>
+    </div>
+  );
+}
+
 const ROAD_OPTIONS = [
   { value: "all", label: "All loaded" },
   { value: "motorway", label: "Motorway and trunk" },
@@ -385,7 +462,7 @@ function SettingsPanel({
           <div className="app-controls-divider" />
           <div className="app-controls-settings">
             <div className="app-controls-group">
-              <div className="app-controls-section-title">Map</div>
+              <div className="app-controls-section-title">Roads</div>
 
               <div className="app-controls-field">
                 <span className="app-controls-button" aria-hidden="true">
@@ -416,6 +493,10 @@ function SettingsPanel({
                   align="end"
                 />
               </div>
+            </div>
+
+            <div className="app-controls-group">
+              <div className="app-controls-section-title">Markers</div>
 
               <button
                 type="button"
