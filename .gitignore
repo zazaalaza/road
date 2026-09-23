@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# NDW/OSM phase 1. Regenerate with: python3 pipelines/phase1.py all
+/data/raw/
+/data/processed/
+/data/matches/
+/data/tiles/

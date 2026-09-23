@@ -6,9 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "phase1": "python3 pipelines/phase1.py all",
+    "phase1:metrics": "python3 pipelines/phase1.py metrics",
+    "phase1:match": "python3 pipelines/phase1.py match",
+    "phase1:tiles": "python3 pipelines/tiles.py",
+    "phase1:selftest": "python3 pipelines/phase1.py selftest"
   },
   "dependencies": {
+    "maplibre-gl": "^6.11.0",
     "next": "16.3.6",
     "react": "19.2.8",
     "react-dom": "19.2.8"

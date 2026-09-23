@@ -1,9 +1,12 @@
-import Image from "next/image";
-
 export default function Home() {
   return (
-    <div>
-    <h1>Roads</h1>
-    </div>
+    <main className="p-8">
+      <h1 className="text-2xl font-semibold">Roads</h1>
+      <p className="mt-4">
+        <a className="underline" href="/experiments/ndw-osm-matching">
+          NDW–OSM matching experiment
+        </a>
+      </p>
+    </main>
   );
 }

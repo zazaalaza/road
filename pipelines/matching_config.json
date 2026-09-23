@@ -1,0 +1,36 @@
+{
+  "extent_profile": "ndw_national",
+  "extents": {
+    "ndw_national": {
+      "min_lon": 3.35888,
+      "min_lat": 50.753796,
+      "max_lon": 7.2274327,
+      "max_lat": 53.433475,
+      "note": "Min/max display coordinate of every site in the national NDW measurement file (87,967 sites on 23 Sep 2026). The pipeline does not clip sites to this box. OSM roads are every configured highway class in the Geofabrik Netherlands PBF, which covers this box, including ways no site snaps to."
+    }
+  },
+  "highways": [
+    "motorway",
+    "motorway_link",
+    "trunk",
+    "trunk_link",
+    "primary",
+    "primary_link",
+    "secondary",
+    "secondary_link",
+    "tertiary",
+    "tertiary_link"
+  ],
+  "point_snap_radius_m": 25,
+  "highlight_half_length_m": 180,
+  "ndw": {
+    "measurement_url": "https://opendata.ndw.nu/measurement.xml.gz",
+    "trafficspeed_url": "https://opendata.ndw.nu/trafficspeed.xml.gz",
+    "traveltime_url": "https://opendata.ndw.nu/traveltime.xml.gz"
+  },
+  "osm": {
+    "pbf_url": "https://download.geofabrik.de/europe/netherlands-latest.osm.pbf",
+    "pbf_filename": "netherlands-latest.osm.pbf",
+    "extract_filename": "nl_highways.geojsonl"
+  }
+}
