@@ -81,25 +81,50 @@ function escapeHtml(value: unknown) {
 }
 
 function popupHtml(properties: Properties) {
-  const rows: Array<[string, unknown]> = [
-    ["Site", properties.site_id],
-    ["Name", properties.name],
-    ["Road ref", properties.road_ref],
-    ["OSM way", properties.osm_way_id],
-    ["Highway", properties.highway],
-    ["Confidence", properties.confidence],
-    ["Distance m", properties.match_distance_m],
-    ["Speed km/h", properties.metric_speed_kmh],
-    ["Implied km/h", properties.metric_speed_implied_kmh],
-    ["Flow veh/h", properties.metric_flow_vehh],
-    ["Travel time s", properties.metric_travel_time_s],
-    ["Time", properties.metric_time],
-    ["Reason", properties.reason],
-    ["Notes", properties.notes],
+  const sections: Array<[string, Array<[string, unknown]>]> = [
+    [
+      "Location",
+      [
+        ["Site", properties.site_id],
+        ["Name", properties.name],
+        ["Road ref", properties.road_ref],
+        ["OSM way", properties.osm_way_id],
+        ["Highway", properties.highway],
+      ],
+    ],
+    [
+      "Data",
+      [
+        ["Speed km/h", properties.metric_speed_kmh],
+        ["Implied km/h", properties.metric_speed_implied_kmh],
+        ["Flow veh/h", properties.metric_flow_vehh],
+        ["Travel time s", properties.metric_travel_time_s],
+      ],
+    ],
+    [
+      "Meta",
+      [
+        ["Distance", properties.match_distance_m],
+        ["Confidence", properties.confidence],
+        ["Notes", properties.notes],
+        ["Time", properties.metric_time],
+        ["Reason", properties.reason],
+      ],
+    ],
   ];
-  return rows
-    .filter(([, value]) => value !== null && value !== undefined && value !== "")
-    .map(([label, value]) => `<div><span style="color:#9aa3b2">${escapeHtml(label)}</span> ${escapeHtml(value)}</div>`)
+  return sections
+    .flatMap(([heading, rows]) => {
+      const visible = rows.filter(([, value]) => value !== null && value !== undefined && value !== "");
+      return visible.length === 0 ? [] : [[heading, visible] as const];
+    })
+    .map(([heading, rows], index) => {
+      const gap = index === 0 ? "" : "margin-top:8px;";
+      const title = `<div style="${gap}color:#6e7787;font-size:10px">${escapeHtml(heading)}</div>`;
+      const body = rows
+        .map(([label, value]) => `<div><span style="color:#9aa3b2">${escapeHtml(label)}</span> ${escapeHtml(value)}</div>`)
+        .join("");
+      return title + body;
+    })
     .join("");
 }
 
@@ -114,6 +139,7 @@ export default function MatchingCompare() {
   const [ready, setReady] = useState(false);
   const mapNode = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
+  const syncCursorRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -217,16 +243,19 @@ export default function MatchingCompare() {
       };
       const onLoad = () => {
         if (cancelled) return;
-        const open = (event: MapMouseEvent) => {
+        const interactiveLayers = ["matched-sites", "missed-sites", "matches"] as const;
+        const featuresAt = (point: MapMouseEvent["point"]) => {
           const pad = 8;
-          const found = map.queryRenderedFeatures(
+          return map.queryRenderedFeatures(
             [
-              [event.point.x - pad, event.point.y - pad],
-              [event.point.x + pad, event.point.y + pad],
+              [point.x - pad, point.y - pad],
+              [point.x + pad, point.y + pad],
             ],
-            { layers: ["matched-sites", "missed-sites", "matches"] },
+            { layers: [...interactiveLayers] },
           );
-          const feature = found[0];
+        };
+        const open = (event: MapMouseEvent) => {
+          const feature = featuresAt(event.point)[0];
           if (!feature) return;
           const properties = (feature.properties ?? {}) as Properties;
           new maplibregl.Popup({ className: "ndw-popup", maxWidth: "320px" })
@@ -234,17 +263,18 @@ export default function MatchingCompare() {
             .setHTML(popupHtml(properties))
             .addTo(map);
         };
+        let pointer: MapMouseEvent["point"] | null = null;
+        const syncCursor = () => {
+          map.getCanvas().style.cursor = pointer && featuresAt(pointer).length ? "pointer" : "";
+        };
+        syncCursorRef.current = syncCursor;
         map.on("click", open);
-        map.on("mouseenter", "matched-sites", () => {
-          map.getCanvas().style.cursor = "pointer";
+        map.on("mousemove", (event) => {
+          pointer = event.point;
+          syncCursor();
         });
-        map.on("mouseleave", "matched-sites", () => {
-          map.getCanvas().style.cursor = "";
-        });
-        map.on("mouseenter", "missed-sites", () => {
-          map.getCanvas().style.cursor = "pointer";
-        });
-        map.on("mouseleave", "missed-sites", () => {
+        map.on("mouseout", () => {
+          pointer = null;
           map.getCanvas().style.cursor = "";
         });
         map.once("idle", () => {
@@ -262,6 +292,7 @@ export default function MatchingCompare() {
     })();
     return () => {
       cancelled = true;
+      syncCursorRef.current = null;
       cancelAnimationFrame(frame);
       mapRef.current?.remove();
       mapRef.current = null;
@@ -287,6 +318,9 @@ export default function MatchingCompare() {
     map.setPaintProperty("matched-sites", "circle-stroke-width", paint.matchedStroke);
     map.setPaintProperty("missed-sites", "circle-radius", paint.missed);
     map.setPaintProperty("missed-sites", "circle-stroke-width", paint.missedStroke);
+    map.once("idle", () => {
+      syncCursorRef.current?.();
+    });
   }, [ready, metric, highway, showDots, dotSize]);
 
   if (error) {
