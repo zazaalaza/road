@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import MatchingCompare from "@/components/ndw-osm/MatchingCompare";
 
 export const metadata: Metadata = {
-  title: "NDW–OSM matching",
+  title: "NDW-OSM matching",
   description: "NDW sites matched onto OSM roads",
 };
 

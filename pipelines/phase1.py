@@ -443,7 +443,7 @@ def selftest() -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="NDW–OSM matching phase 1")
+    parser = argparse.ArgumentParser(description="NDW-OSM matching phase 1")
     parser.add_argument("command", choices=("fetch", "normalize", "match", "all", "metrics", "tiles", "selftest"))
     parser.add_argument("--refresh", action="store_true", help="Re-download files even if they exist")
     parser.add_argument("--config", type=Path, default=PIPELINES / "matching_config.json")

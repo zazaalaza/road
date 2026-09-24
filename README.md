@@ -2,7 +2,7 @@
 
 ## What this is
 
-This project matches two datasets — NDW traffic measurement sites and OSM roads in the Netherlands — and shows the traffic on a map. Each site is snapped to the nearest OSM way within 25 m, and a short stretch of that way is coloured by speed, flow, or travel time.
+This project matches two datasets - NDW traffic measurement sites and OSM roads in the Netherlands - and shows the traffic on a map. Each site is snapped to the nearest OSM way within 25 m, and a short stretch of that way is coloured by speed, flow, or travel time.
 
 ## Run
 

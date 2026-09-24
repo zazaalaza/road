@@ -9,7 +9,7 @@ highlight clip (about half_m each side of a site).
 Ways are bridged only when they share an endpoint, their OSM ref tags are
 exactly equal and non-empty, neither is a *_link, and the bearings leaving
 the shared node differ by at least 45 degrees (a continuation, corner, or
-fork — not a reversal onto the opposing carriageway).
+fork - not a reversal onto the opposing carriageway).
 """
 
 from __future__ import annotations

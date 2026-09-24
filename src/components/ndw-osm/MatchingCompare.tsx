@@ -9,6 +9,7 @@ import {
   ColorOnIcon,
   DitherOffIcon,
   DitherOnIcon,
+  GitHubIcon,
   MediumStationsIcon,
   NormalStationsIcon,
   NormalTracksIcon,
@@ -73,7 +74,7 @@ function viewBounds(bounds: Bounds): [[number, number], [number, number]] {
 }
 
 function escapeHtml(value: unknown) {
-  return String(value ?? "—")
+  return String(value ?? "-")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;");
@@ -325,7 +326,7 @@ export default function MatchingCompare() {
   if (error) {
     return (
       <main className="p-8 text-sm">
-        <h1 className="text-xl font-semibold">NDW–OSM matching</h1>
+        <h1 className="text-xl font-semibold">NDW-OSM matching</h1>
         <p className="mt-3 text-red-700">{error}</p>
       </main>
     );
@@ -492,8 +493,17 @@ function SettingsPanel({
   return (
     <div className="app-controls" data-settings-open={settingsOpen ? "true" : "false"}>
       <div className="app-controls-header">
-        <div className="app-controls-title">NDW–OSM</div>
+        <div className="app-controls-title">NDW-OSM</div>
         <div className="app-controls-header-actions">
+          <a
+            className="app-controls-header-button"
+            href="https://github.com/zazaalaza/road"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub"
+          >
+            <GitHubIcon />
+          </a>
           <button
             type="button"
             className="app-controls-header-button"
