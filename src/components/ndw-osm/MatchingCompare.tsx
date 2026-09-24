@@ -169,7 +169,7 @@ export default function MatchingCompare() {
       const maplibregl = await import("maplibre-gl");
       if (cancelled) return;
       maplibregl.setWorkerUrl("/vendor/maplibre/maplibre-gl-worker.mjs");
-      const tiles = [`${window.location.origin}/api/ndw-tiles/{z}/{x}/{y}`];
+      const tiles = [`${window.location.origin}/ndw-tiles/{z}/{x}/{y}.pbf`];
       const map = new maplibregl.Map({
         container: node,
         style: {

@@ -3,7 +3,9 @@
 
 MapLibre retiled those GeoJSON files in the browser on every zoom, which is
 why roads and dots vanished and painted back in. This writes data/tiles/ndw.mbtiles
-once. The page then requests tiles that already exist.
+once, then copies each gzip tile to public/ndw-tiles/{z}/{x}/{y}.pbf so the
+page can request the same bytes as static files. The mbtiles y row is TMS, so
+the file name uses the XYZ y the map asks for.
 
     python3 pipelines/tiles.py
 
@@ -24,6 +26,8 @@ MATCHES = ROOT / "data" / "matches"
 PROCESSED = ROOT / "data" / "processed"
 TILES = ROOT / "data" / "tiles"
 MBTILES = TILES / "ndw.mbtiles"
+PUBLIC_TILES = ROOT / "public" / "ndw-tiles"
+MAX_TILE_BYTES = 95 * 1024 * 1024
 
 
 def _points(features: list[dict], lon_key: str, lat_key: str, path: Path) -> int:
@@ -115,6 +119,41 @@ def build_tiles() -> None:
     print("Building vector tiles…", flush=True)
     subprocess.run(command, check=True)
     _report()
+    export_static_tiles()
+
+
+def export_static_tiles() -> None:
+    """Copy gzip tile blobs out of the mbtiles archive as static XYZ files.
+
+    Nothing is decompressed or merged. The archive stays the local source.
+    """
+    if not MBTILES.exists():
+        raise SystemExit(f"Missing {MBTILES}. Run python3 pipelines/tiles.py first.")
+    if PUBLIC_TILES.exists():
+        shutil.rmtree(PUBLIC_TILES)
+    connection = sqlite3.connect(f"file:{MBTILES}?mode=ro", uri=True)
+    try:
+        rows = connection.execute(
+            "SELECT zoom_level, tile_column, tile_row, tile_data FROM tiles"
+        )
+        count = 0
+        total = 0
+        for zoom, column, row, blob in rows:
+            data = bytes(blob)
+            if len(data) >= MAX_TILE_BYTES:
+                raise SystemExit(
+                    f"Tile z{zoom}/{column} TMS row {row} is {len(data)} bytes, "
+                    f"at or over {MAX_TILE_BYTES}."
+                )
+            y = (1 << zoom) - 1 - row
+            dest = PUBLIC_TILES / str(zoom) / str(column) / f"{y}.pbf"
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_bytes(data)
+            count += 1
+            total += len(data)
+    finally:
+        connection.close()
+    print(f"  exported {count} tiles to {PUBLIC_TILES} ({total} bytes)", flush=True)
 
 
 def _report() -> None:

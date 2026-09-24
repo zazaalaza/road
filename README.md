@@ -62,10 +62,10 @@ The matching map.
 
 `pipelines/matchers.py` snaps each site to the nearest OSM way within 25 m and writes a short highlight along that way, with colours for speed, flow, and travel time. The spatial index and the clip are in `pipelines/geo.py`.
 
-`pipelines/tiles.py` turns those GeoJSON files into one vector-tile set with tippecanoe, so the browser requests tiles instead of retiling the full files.
+`pipelines/tiles.py` writes a local archive at `data/tiles/ndw.mbtiles`, then copies each gzip tile to `public/ndw-tiles/{z}/{x}/{y}.pbf`, grouped by zoom. The archive stays gitignored. `public/ndw-tiles` is what gets deployed, and nothing is merged back into one database.
 
 `data/` is produced by the pipeline and gitignored.
 
-`src/app/experiments/ndw-osm-matching/page.tsx` is the experiment page. `src/components/ndw-osm/MatchingCompare.tsx` is one MapLibre map: matches coloured by speed, flow, or travel time, with settings for road class, site dots, and dot size.
+`src/app/experiments/ndw-osm-matching/page.tsx` is the experiment page. `src/components/ndw-osm/MatchingCompare.tsx` is one MapLibre map that reads those tile files directly: matches coloured by speed, flow, or travel time, with settings for road class, site dots, and dot size.
 
-`src/app/api/ndw-tiles/[z]/[x]/[y]/route.ts` serves tiles from `data/tiles/ndw.mbtiles`. `src/app/api/ndw-osm/[dataset]/route.ts` serves the manifest and GeoJSON.
+`public/ndw-tiles/{z}/{x}/{y}.pbf` is served as a static file with gzip content-encoding. `src/app/api/ndw-osm/[dataset]/route.ts` serves the manifest and GeoJSON.

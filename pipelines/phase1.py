@@ -10,7 +10,7 @@
 Config (extent, point-snap radius): pipelines/matching_config.json
 Outputs: data/processed/, data/matches/, and data/tiles/ndw.mbtiles.
 Raw downloads stay in data/raw/. The test page reads the manifest through
-/api/ndw-osm/ and the map through /api/ndw-tiles/.
+/api/ndw-osm/ and the map through /ndw-tiles/{z}/{x}/{y}.pbf.
 
 OSM comes from the Geofabrik Netherlands PBF, filtered with the osmium CLI
 (brew install osmium-tool). Every NDW site in the national measurement file
