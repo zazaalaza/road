@@ -17,8 +17,7 @@ import {
   ThinTracksIcon,
 } from "@/utils/icons/icons";
 
-const DOT_SIZES = ["small", "medium", "large"] as const;
-type DotSize = (typeof DOT_SIZES)[number];
+type DotSize = ["small", "medium", "large"][number];
 
 /** Large is the previous circle size. Medium and small step down from it. */
 const DOT_PAINT: Record<
@@ -144,7 +143,7 @@ export default function MatchingCompare() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const response = await fetch("/api/ndw-osm/comparison_manifest");
+      const response = await fetch("/ndw/comparison_manifest.json");
       if (!response.ok) {
         throw new Error("Manifest is missing. Run python3 pipelines/phase1.py match");
       }
@@ -458,16 +457,33 @@ function SettingsPanel({
   onDotSize: (size: DotSize) => void;
 }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settingsMounted, setSettingsMounted] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const settingsMounted = settingsOpen || closing;
+  const closeTimer = useRef<number | null>(null);
 
   useEffect(() => {
+    return () => {
+      if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
+    };
+  }, []);
+
+  const toggleSettings = () => {
+    if (closeTimer.current !== null) {
+      window.clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
     if (settingsOpen) {
-      setSettingsMounted(true);
+      setSettingsOpen(false);
+      setClosing(true);
+      closeTimer.current = window.setTimeout(() => {
+        closeTimer.current = null;
+        setClosing(false);
+      }, SETTINGS_EXIT_MS);
       return;
     }
-    const timer = window.setTimeout(() => setSettingsMounted(false), SETTINGS_EXIT_MS);
-    return () => window.clearTimeout(timer);
-  }, [settingsOpen]);
+    setClosing(false);
+    setSettingsOpen(true);
+  };
 
   const RoadsIcon = highway === "all" ? NormalTracksIcon : ThinTracksIcon;
   const DotSizeIcon =
@@ -484,7 +500,7 @@ function SettingsPanel({
             aria-label={settingsOpen ? "Hide settings" : "Show settings"}
             aria-expanded={settingsOpen}
             aria-pressed={settingsOpen}
-            onClick={() => setSettingsOpen(!settingsOpen)}
+            onClick={toggleSettings}
           >
             <SettingsIcon />
           </button>

@@ -68,4 +68,4 @@ The matching map.
 
 `src/app/experiments/ndw-osm-matching/page.tsx` is the experiment page. `src/components/ndw-osm/MatchingCompare.tsx` is one MapLibre map that reads those tile files directly: matches coloured by speed, flow, or travel time, with settings for road class, site dots, and dot size.
 
-`public/ndw-tiles/{z}/{x}/{y}.pbf` is served as a static file with gzip content-encoding. `src/app/api/ndw-osm/[dataset]/route.ts` serves the manifest and GeoJSON.
+`public/ndw/comparison_manifest.json` is the bounds and counts the map loads on the deployed site. `public/ndw-tiles/{z}/{x}/{y}.pbf` is served as a static file with gzip content-encoding. `src/app/api/ndw-osm/[dataset]/route.ts` serves local GeoJSON from `data/` when those files exist.
